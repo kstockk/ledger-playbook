@@ -3,6 +3,9 @@
   hosts: all
   become: true
 
+  vars:
+    - cronjob_fetch_prices: true
+
   pre_tasks:
     - name: Ensure all required variables are set
       fail:
@@ -44,6 +47,13 @@
           repo: "https://github.com/kstockk/ledger-importers"
           dest: "/Ledger/importers"
           update: yes
+
+      - name: Set LEDGER_DATA_DIR environment variable in .bashrc
+        lineinfile:
+          path: /home/{{ user_name }}/.bashrc
+          line: 'export LEDGER_DATA_DIR="/Ledger"'
+          state: present
+          create: yes
       become_user: "{{ user_name }}"
 
     - name: Create symlink for /Ledger/data/inbox pointing to "{{ mount_point }}"/data/inbox
@@ -62,3 +72,20 @@
       systemd:
         name: fava.service
         state: restarted
+
+    - name: Check if prices.beancount exists
+      stat:
+        path: "/Ledger/data/prices.beancount"
+      register: prices_file
+      when: cronjob_fetch_prices | default(False)
+
+    - name: Create cron job at 20:00 daily to fetch new beancount prices
+      ansible.builtin.cron:
+        name: "Fetch Beancount Prices"
+        user: "{{ user_name }}"
+        minute: "0"
+        hour: "20"
+        job: "bean-price -d $(date +%Y-%m-%d) /Ledger/data/master.beancount >> /Ledger/data/prices.beancount"
+      when: 
+        - cronjob_fetch_prices | default(False)
+        - prices_file.stat.exists
