@@ -1,0 +1,22 @@
+---
+- name: Install fava and other packages
+  pip:
+    name:
+      - fava
+      - fava[excel]
+      - git+https://github.com/beancount/beanprice.git
+      - git+https://github.com/kstockk/fetch-unit-prices.git
+    state: present
+
+- name: Ensure systemd service file for Fava exists
+  template: 
+    src: templates/fava.service.j2
+    dest: "/etc/systemd/system/fava.service"
+  notify:
+    - reload systemctl
+
+- name: Enable the Fava service to start on boot
+  systemd:
+    name: fava
+    enabled: yes
+    state: started

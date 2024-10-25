@@ -1,0 +1,6 @@
+[all]
+192.168.40.40
+
+[all:vars]
+ansible_connection=ssh
+ansible_user=root

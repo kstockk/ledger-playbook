@@ -1,0 +1,64 @@
+---
+- name: Set-up Ledger data files
+  hosts: all
+  become: true
+
+  pre_tasks:
+    - name: Ensure all required variables are set
+      fail:
+        msg: "One or more required variables are missing: '{{ item }}'."
+      loop:
+        - git_user
+        - git_password
+      when: vars[item] is not defined
+
+  tasks:
+    - name: Ensure /Ledger directory exists
+      file:
+        path: "/Ledger"
+        owner: "{{ user_name }}"
+        group: "{{ user_name }}"
+        state: directory
+
+    - block:
+      - name: Git clone Ledger
+        git:
+          repo: "{{ ledger_repo }}"
+          dest: "/Ledger"
+          update: no
+
+      - name: Set global Git user name
+        git_config:
+          name: user.name
+          value: "{{ git_user }}"
+          scope: global
+
+      - name: Set global Git user email
+        git_config:
+          name: user.email
+          value: "{{ git_password }}"
+          scope: global
+
+      - name: Git clone custom ledger-importers
+        git:
+          repo: "https://github.com/kstockk/ledger-importers"
+          dest: "/Ledger/importers"
+          update: yes
+      become_user: "{{ user_name }}"
+
+    - name: Create symlink for /Ledger/data/inbox pointing to "{{ mount_point }}"/data/inbox
+      file:
+        src: "{{ mount_point }}/data/inbox"
+        dest: /Ledger/data/inbox
+        state: link
+
+    - name: Create symlink for /data/documents pointing to "{{ mount_point }}"/data/documents
+      file:
+        src: "{{ mount_point }}/data/documents"
+        dest: /Ledger/data/documents
+        state: link
+
+    - name: Restart Fava service
+      systemd:
+        name: fava.service
+        state: restarted

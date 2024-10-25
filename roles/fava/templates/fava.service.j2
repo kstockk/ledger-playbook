@@ -1,0 +1,7 @@
+[Unit]
+Description=Fava Web UI for Beancount
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/fava --host localhost --port 5000 /Ledger/data/master.beancount
+User={{ user_name }}

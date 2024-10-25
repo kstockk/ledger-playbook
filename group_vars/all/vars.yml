@@ -1,0 +1,17 @@
+---
+# User
+user_name: beancounter
+user_password: "$6$ea/kQPbMFeF5US2f$Q0HaHBIDiWFe/gjtfYhxArVSASIOY5h/a6TX9XcdwA9.xDeyETOUIB.QhLyqKC8k9DPVqdifZ4arGVFMMochA."
+
+# Defaults
+locale: en_AU.UTF-8
+timezone: "Australia/Melbourne"
+
+# NFS share mount
+nfs_server: "192.168.40.181"
+nfs_share: "/volume1/Ledger"
+mount_point: "/mnt/emperor/Ledger"
+fstab_options: "auto,nofail,noatime,nolock,intr,tcp,actimeo=1800"
+
+# Ledger repo
+ledger_repo: "gitea@192.168.40.70:kstockk/Ledger.git"

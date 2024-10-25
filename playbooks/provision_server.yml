@@ -1,0 +1,34 @@
+---
+- name: Provision Ledger server
+  hosts: all
+  become: true
+
+  roles:
+    - bootstrap
+    - create_user
+    - fava
+    - apache
+
+  tasks:
+    - name: Mount NFS share
+      block:
+      - name: Ensure the mount point exists
+        file:
+          path: "{{ mount_point }}"
+          state: directory
+
+      - name: Mount the NFS share
+        mount:
+          src: "{{ nfs_server }}:{{ nfs_share }}"
+          path: "{{ mount_point }}"
+          fstype: nfs
+          opts: "{{ fstab_options }}"
+          state: mounted
+
+      - name: Ensure the NFS mount is added to /etc/fstab
+        mount:
+          src: "{{ nfs_server }}:{{ nfs_share }}"
+          path: "{{ mount_point }}"
+          fstype: nfs
+          opts: "{{ fstab_options }}"
+          state: present

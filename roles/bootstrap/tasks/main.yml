@@ -1,0 +1,81 @@
+---
+- name: Set the hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Update and upgrade apt packages (Debian and Ubuntu)
+  when: ansible_os_family == "Debian"
+  apt:
+    upgrade: yes
+    update_cache: yes
+
+- name: Generate the locale (Debian and Ubuntu)
+  when: ansible_os_family == "Debian"
+  locale_gen:
+    name: "{{ locale }}"
+    state: present
+
+- name: Check current locale
+  command: localectl status
+  register: locale_status
+  changed_when: false 
+
+- name: Set the locale
+  command: "localectl set-locale LANG={{ locale }}"
+  when: ansible_os_family == "Debian" and locale_status.stdout.find(locale) == -1
+
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ timezone }}"
+
+- name: Ensure default packages are present
+  apt:
+    name: 
+      - nfs-common
+      - python3-pip
+      - git-all
+    state: present
+
+- name: Ensure fstrim.timer is enabled 
+  systemd:
+    name: fstrim.timer  
+    enabled: true
+    state: started
+
+- name: Check if reboot required
+  stat:
+    path: /var/run/reboot-required
+  register: reboot_required_file
+
+- name: Reboot if required
+  reboot:
+    msg: Rebooting due to a kernel update
+  when: reboot_required_file.stat.exists == true
+
+- name: Wait for the system to come back online
+  wait_for:
+    port: 22
+    delay: 10
+    timeout: 300
+  when: reboot_required_file.stat.exists == true
+
+- name: Check if root_cron_email is defined
+  debug:
+    msg: "The variable 'root_cron_email' is not defined, skipping cron email notification task."
+  when: root_cron_email is not defined
+
+- block:
+  - name: Configure cron PATH
+    cron:
+      name: PATH
+      user: "root"
+      env: yes
+      job: "/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/bin"
+
+  - name: Enable cron e-mail notifications for root
+    cron:
+      name: MAILTO
+      user: "root"
+      env: yes
+      job: "{{ root_cron_email }}"
+  when: root_cron_email is defined

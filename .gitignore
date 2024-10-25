@@ -1,0 +1,6 @@
+venv/
+*.retry
+secrets.yml
+.DS_Store
+/hosts
+.vscode/

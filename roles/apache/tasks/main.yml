@@ -1,0 +1,48 @@
+---
+- name: Ensure Apache packages are present
+  apt:
+    name:
+      - apache2
+    state: present
+
+- name: Check if 000-default.conf is already disabled
+  stat:
+    path: /etc/apache2/sites-enabled/000-default.conf
+  register: default_site_status
+
+- name: Disable the default Apache site if it's enabled
+  command: a2dissite 000-default.conf
+  when: default_site_status.stat.exists
+  notify: Reload Apache
+
+- name: Ensure htpasswd file with hashed password
+  copy:
+    dest: /etc/apache2/.htpasswd
+    content: |
+      {{ user_name }}:{{ user_password }}
+
+- name: Create virtual host for reverse proxy
+  template:
+    src: fava.conf.j2
+    dest: /etc/apache2/sites-available/fava.conf
+  notify: Reload Apache
+
+- name: Enable proxy and auth modules
+  apache2_module:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - proxy
+    - proxy_http
+    - auth_basic
+    - authn_file
+
+- name: Check if fava.conf is already enabled
+  stat:
+    path: /etc/apache2/sites-enabled/fava.conf
+  register: fava_site_status
+
+- name: Enable the Fava virtual host if not already enabled
+  command: a2ensite fava.conf
+  when: not fava_site_status.stat.exists
+  notify: Reload Apache
