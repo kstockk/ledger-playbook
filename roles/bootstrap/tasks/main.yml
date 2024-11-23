@@ -33,6 +33,7 @@
     name: 
       - nfs-common
       - python3-pip
+      - python3-venv
       - git-all
     state: present
 

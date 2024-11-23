@@ -3,5 +3,12 @@ Description=Fava Web UI for Beancount
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/fava --host localhost --port 5000 /Ledger/data/master.beancount
+{# Old #}
+{# ExecStart=/usr/local/bin/fava --host localhost --port 5000 /Ledger/data/master.beancount #}
+
+{# New #}
+ExecStart=/opt/fava_env/bin/fava --host localhost --port 5000 /Ledger/data/master.beancount
+Environment="PATH=/opt/fava_env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+{# Environment="PYTHONPATH=/opt/fava_extensions:$PYTHONPATH" #}
+
 User={{ user_name }}

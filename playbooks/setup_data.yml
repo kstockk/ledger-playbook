@@ -85,7 +85,7 @@
         user: "{{ user_name }}"
         minute: "0"
         hour: "20"
-        job: "bean-price --update /Ledger/data/master.beancount >> /Ledger/data/prices.beancount"
+        job: "/opt/fava_env/bin/bean-price --update /Ledger/data/master.beancount >> /Ledger/data/prices.beancount"
       when: 
         - cronjob_fetch_prices | default(False)
         - prices_file.stat.exists

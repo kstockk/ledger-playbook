@@ -1,11 +1,24 @@
 ---
+- name: Remove existing virtual environment
+  file:
+    path: /opt/fava_env
+    state: absent
+
+- name: Ensure Python virtual environment is present
+  command:
+    cmd: python3 -m venv /opt/fava_env
+  args:
+    creates: /opt/fava_env
+
 - name: Install fava and other packages
   pip:
+    virtualenv: /opt/fava_env
     name:
       - fava
       - fava[excel]
       - git+https://github.com/beancount/beanprice.git
       - git+https://github.com/kstockk/fetch-unit-prices.git
+      - git+https://github.com/kstockk/fava-git-branch-ext.git
     state: present
 
 - name: Ensure systemd service file for Fava exists
